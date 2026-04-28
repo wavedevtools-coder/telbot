@@ -7,7 +7,7 @@ const os = require('os');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 
-const bot = new TelegramBot("8632848173:AAFjVXkI6vgOUTVnDTf3x3dxjlQU2jP-03U", { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
 const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
 const execAsync = promisify(exec);
 const allowedChatId = process.env.TELEGRAM_CHAT_ID ? String(process.env.TELEGRAM_CHAT_ID).trim() : null;
