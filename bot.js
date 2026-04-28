@@ -7,14 +7,54 @@ const os = require('os');
 const { exec } = require('child_process');
 const { promisify } = require('util');
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
 const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
 const execAsync = promisify(exec);
 const allowedChatId = process.env.TELEGRAM_CHAT_ID ? String(process.env.TELEGRAM_CHAT_ID).trim() : null;
+let pollingRestartTimer = null;
 
 const userSessions = new Map();
 
-console.log('🤖 Image-to-Video Bot is running...');
+console.log('🤖 Image-to-Video Bot is starting...');
+
+async function startBotPolling() {
+  try {
+    // Ensure we are in polling mode and not conflicting with an old webhook config.
+    await bot.deleteWebHook();
+    await bot.startPolling({ restart: true });
+    console.log('✅ Telegram polling started.');
+  } catch (err) {
+    console.error('Failed to start Telegram polling:', err.message);
+    schedulePollingRestart();
+  }
+}
+
+function schedulePollingRestart(delayMs = 5000) {
+  if (pollingRestartTimer) {
+    return;
+  }
+
+  pollingRestartTimer = setTimeout(async () => {
+    pollingRestartTimer = null;
+    await startBotPolling();
+  }, delayMs);
+}
+
+bot.on('polling_error', async (err) => {
+  console.error('Polling error:', err.message);
+
+  if (String(err.message).includes('409 Conflict')) {
+    console.log('Another poller is active. Retrying shortly...');
+    try {
+      await bot.stopPolling();
+    } catch (_stopErr) {
+      // Ignore stop failures and retry.
+    }
+    schedulePollingRestart();
+  }
+});
+
+startBotPolling();
 
 // /start command
 bot.onText(/\/start/, (msg) => {
