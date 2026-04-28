@@ -6,9 +6,10 @@ const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
 const { promisify } = require('util');
+const bundledFfmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
-const ffmpegPath = process.env.FFMPEG_PATH || 'ffmpeg';
+const ffmpegPath = process.env.FFMPEG_PATH || bundledFfmpegPath || 'ffmpeg';
 const execAsync = promisify(exec);
 const allowedChatId = process.env.TELEGRAM_CHAT_ID ? String(process.env.TELEGRAM_CHAT_ID).trim() : null;
 let pollingRestartTimer = null;
