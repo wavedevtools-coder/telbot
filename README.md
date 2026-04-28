@@ -123,10 +123,11 @@ Video downloaded and sent back to user
 ## 🐳 Docker (Optional)
 
 ```dockerfile
-FROM node:20-alpine
+FROM node:20-bookworm-slim
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 COPY package*.json ./
-RUN npm install
+RUN npm ci --omit=dev
 COPY . .
 CMD ["node", "bot.js"]
 ```
